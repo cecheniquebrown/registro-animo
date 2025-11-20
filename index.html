@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Registro personal del ánimo (noche)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #0f172a;
+      background: #f1f5f9;
+    }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #e5e7eb;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+    @media (min-width: 900px) {
+      .container {
+        grid-template-columns: 1.2fr 1fr;
+      }
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 16px 20px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    }
+    .card-header {
+      margin-bottom: 8px;
+    }
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .card-subtitle {
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    input[type="text"],
+    input[type="date"],
+    input[type="url"],
+    textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5f5;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+    }
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+    .small-help {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .row {
+      margin-bottom: 10px;
+    }
+    .btn {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+      width: 100%;
+    }
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+    .btn-outline {
+      background: transparent;
+      color: #374151;
+      border: 1px solid #d1d5db;
+    }
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .status {
+      margin-top: 8px;
+      font-size: 0.85rem;
+    }
+    .status.ok {
+      color: #16a34a;
+    }
+    .status.error {
+      color: #b91c1c;
+    }
+    .config-card {
+      border: 1px dashed #cbd5f5;
+    }
+    .config-grid {
+      display: grid;
+      gap: 8px;
+    }
+    @media (min-width: 768px) {
+      .config-grid {
+        grid-template-columns: 1fr auto auto;
+      }
+    }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    input[type="range"] {
+      flex: 1;
+    }
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: #eff6ff;
+      color: #1d4ed8;
+      margin-top: 4px;
+    }
+    .quote-box {
+      background: white;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border-left: 4px solid #3b82f6;
+      font-size: 0.85rem;
+    }
+    .quote-box p {
+      margin: 4px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Panel de configuración -->
+    <div class="card config-card" style="grid-column: 1 / -1;">
+      <div class="card-header">
+        <div class="card-title">⚙️ Configuración de envío (solo la primera vez)</div>
+        <div class="card-subtitle">
+          Pega aquí el <strong>endpoint</strong> de tu Web App (Google Apps Script). Se guardará en este navegador.
+        </div>
+      </div>
+      <div class="config-grid">
+        <div class="row">
+          <label for="endpointInput">Endpoint (termina en <code>/exec</code>)</label>
+          <input id="endpointInput" type="url" placeholder="https://script.google.com/macros/s/XXXXXXXX/exec" />
+        </div>
+        <button id="saveEndpointBtn" class="btn btn-secondary">Guardar endpoint</button>
+        <button id="selfTestBtn" class="btn btn-outline">Auto-chequeo</button>
+      </div>
+      <div id="configStatus" class="status"></div>
+    </div>
+
+    <!-- Formulario principal -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🧭 Registro personal del ánimo (noche)</div>
+        <div class="card-subtitle">
+          Completa esto por la noche, cuando el día terminó. No se trata de tener el ánimo “correcto”, sino de observarlo con curiosidad.
+        </div>
+      </div>
+      <form id="registroForm">
+        <div class="row">
+          <label for="codigoPaciente">Código paciente (opcional)</label>
+          <input id="codigoPaciente" type="text" placeholder="Ej: BEN-042 / iniciales o código acordado" />
+        </div>
+        <div class="row">
+          <label for="fecha">Fecha</label>
+          <input id="fecha" type="date" />
+          <div class="small-help">
+            Formato sugerido: <strong>aaaa-mm-dd</strong>. Si tu navegador no muestra el selector de fecha, escribe la fecha así (ej: 2025-11-05).
+          </div>
+        </div>
+        <div class="row">
+          <label for="contexto">Contexto o situación significativa</label>
+          <textarea id="contexto" placeholder="Ej: Evalué mi día completo; cerré pendientes y hablé con un amigo"></textarea>
+        </div>
+        <div class="row">
+          <label for="estado">Estado de ánimo (palabra o breve descripción)</label>
+          <input id="estado" type="text" placeholder="Ej: Sereno y satisfecho" />
+        </div>
+        <div class="row">
+          <label>Nota del día (1–10) — evaluar al final del día</label>
+          <div class="slider-row">
+            <input id="nota" type="range" min="0" max="10" step="1" value="0" />
+            <span id="notaLabel" class="pill">0 = sin evaluar</span>
+          </div>
+        </div>
+        <div class="row">
+          <label for="emociones">Emociones presentes</label>
+          <textarea id="emociones" placeholder="Ej: Calma, gratitud, alivio"></textarea>
+        </div>
+        <div class="row">
+          <label for="pensamientos">Pensamientos o ideas asociadas</label>
+          <textarea id="pensamientos" placeholder="Ej: “Hoy cerré ciclos; puedo descansar con la mente más tranquila”"></textarea>
+        </div>
+        <div class="checkbox-row">
+          <input id="consent" type="checkbox" />
+          <label for="consent">
+            <strong>Obligatorio:</strong> Doy mi consentimiento para compartir estos datos con mi terapeuta.
+          </label>
+        </div>
+        <div class="btn-row">
+          <button type="submit" class="btn btn-primary">Enviar registro</button>
+          <button type="button" id="formSelfTestBtn" class="btn btn-outline">Auto-chequeo</button>
+        </div>
+        <div id="formStatus" class="status"></div>
+      </form>
+    </div>
+
+    <!-- Guía de emociones y viñeta -->
+    <div class="card" style="background: linear-gradient(to bottom, #eff6ff, #e0f2fe);">
+      <div class="card-header">
+        <div class="card-title">🌈 Guía de emociones y sentimientos</div>
+      </div>
+      <div>
+        <div class="row">
+          <p><strong>Emociones básicas:</strong></p>
+          <p>Alegría, Tristeza, Rabia, Miedo, Sorpresa, Asco.</p>
+        </div>
+        <div class="row">
+          <p><strong>Emociones secundarias / sociales:</strong></p>
+          <p>
+            Vergüenza, Culpa, Orgullo, Envidia, Celos, Gratitud, Esperanza, Frustración, Ansiedad,
+            Desconfianza, Confusión, Nostalgia, Serenidad, Amor, Ternura, Empatía, Paz, Euforia,
+            Desamparo, Soledad, Resentimiento, Compasión, Vulnerabilidad, Aceptación.
+          </p>
+        </div>
+        <div class="row">
+          <p><strong>Sentimientos persistentes:</strong></p>
+          <p>
+            Entusiasmo, Desmotivación, Melancolía, Satisfacción, Inseguridad, Valentía, Tranquilidad,
+            Irritación, Desánimo, Plenitud, Gratitud, Alegría serena, Confianza, Amor propio.
+          </p>
+        </div>
+        <div class="row">
+          <div class="quote-box">
+            <p><strong>💡 Viñeta de Psicología Positiva</strong></p>
+            <p>
+              Haz este registro por la noche, cuando el día terminó. No se trata de “tener el ánimo correcto”,
+              sino de observar con curiosidad y amabilidad cómo te sentiste y qué influyó en ello.
+            </p>
+            <p>
+              Cada anotación es una práctica de autocuidado que fortalece la conciencia y la regulación emocional.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Configurar fecha máxima (hoy) en el date-picker
+    document.addEventListener("DOMContentLoaded", function () {
+      const fechaInput = document.getElementById("fecha");
+      const today = new Date().toISOString().split("T")[0];
+      fechaInput.setAttribute("max", today);
+
+      // Cargar endpoint guardado (si existe)
+      const savedEndpoint = localStorage.getItem("registro_animo_endpoint");
+      const endpointInput = document.getElementById("endpointInput");
+      if (savedEndpoint) {
+        endpointInput.value = savedEndpoint;
+      }
+    });
+
+    const endpointInput = document.getElementById("endpointInput");
+    const saveEndpointBtn = document.getElementById("saveEndpointBtn");
+    const configStatus = document.getElementById("configStatus");
+    const selfTestBtn = document.getElementById("selfTestBtn");
+
+    saveEndpointBtn.addEventListener("click", function () {
+      const val = (endpointInput.value || "").trim();
+      if (!val) {
+        configStatus.textContent = "Pega el endpoint antes de guardar.";
+        configStatus.className = "status error";
+        return;
+      }
+      localStorage.setItem("registro_animo_endpoint", val);
+      configStatus.textContent = "Endpoint guardado. Ya puedes enviar registros desde este navegador.";
+      configStatus.className = "status ok";
+    });
+
+    selfTestBtn.addEventListener("click", function () {
+      const ep = (localStorage.getItem("registro_animo_endpoint") || endpointInput.value || "").trim();
+      if (ep && ep.startsWith("http")) {
+        configStatus.textContent = "Auto-chequeo: endpoint parece válido.";
+        configStatus.className = "status ok";
+      } else {
+        configStatus.textContent = "Auto-chequeo: falta configurar un endpoint válido.";
+        configStatus.className = "status error";
+      }
+    });
+
+    // Manejo del slider de nota
+    const notaInput = document.getElementById("nota");
+    const notaLabel = document.getElementById("notaLabel");
+
+    notaInput.addEventListener("input", function () {
+      const val = Number(notaInput.value);
+      notaLabel.textContent = val === 0 ? "0 = sin evaluar" : String(val);
+    });
+
+    // Envío del formulario
+    const form = document.getElementById("registroForm");
+    const formStatus = document.getElementById("formStatus");
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      formStatus.textContent = "";
+      formStatus.className = "status";
+
+      const endpoint = (localStorage.getItem("registro_animo_endpoint") || endpointInput.value || "").trim();
+      if (!endpoint) {
+        formStatus.textContent = "Falta configurar el endpoint en la parte superior.";
+        formStatus.className = "status error";
+        return;
+      }
+
+      const codigoPaciente = document.getElementById("codigoPaciente").value.trim();
+      const fecha = document.getElementById("fecha").value;
+      const contexto = document.getElementById("contexto").value.trim();
+      const estado = document.getElementById("estado").value.trim();
+      const nota = Number(notaInput.value);
+      const emociones = document.getElementById("emociones").value.trim();
+      const pensamientos = document.getElementById("pensamientos").value.trim();
+      const consent = document.getElementById("consent").checked;
+
+      if (!fecha || !estado) {
+        formStatus.textContent = "Completa al menos Fecha y Estado de ánimo.";
+        formStatus.className = "status error";
+        return;
+      }
+      if (!consent) {
+        formStatus.textContent = "Debes aceptar el consentimiento para enviar.";
+        formStatus.className = "status error";
+        return;
+      }
+      if (!Number.isFinite(nota) || nota < 1 || nota > 10) {
+        formStatus.textContent = "Selecciona la Nota del día entre 1 y 10 (mueve el deslizador).";
+        formStatus.className = "status error";
+        return;
+      }
+
+      const payload = {
+        codigo_paciente: codigoPaciente,
+        fecha,
+        contexto,
+        estado,
+        nota,
+        emociones,
+        pensamientos,
+        consent,
+        submitted_at: new Date().toISOString(),
+      };
+
+      try {
+        formStatus.textContent = "Enviando…";
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || "Error al enviar");
+        }
+        formStatus.textContent = "¡Registro enviado! Gracias por completar tu día.";
+        formStatus.className = "status ok";
+
+        // Mantener fecha y código paciente; limpiar el resto y resetear nota a 0
+        document.getElementById("contexto").value = "";
+        document.getElementById("estado").value = "";
+        document.getElementById("emociones").value = "";
+        document.getElementById("pensamientos").value = "";
+        document.getElementById("consent").checked = false;
+        notaInput.value = 0;
+        notaLabel.textContent = "0 = sin evaluar";
+      } catch (err) {
+        formStatus.textContent = "Error al enviar: " + (err.message || err);
+        formStatus.className = "status error";
+      }
+    });
+
+    // Auto-chequeo del formulario
+    const formSelfTestBtn = document.getElementById("formSelfTestBtn");
+    formSelfTestBtn.addEventListener("click", function () {
+      const messages = [];
+      const endpoint = (localStorage.getItem("registro_animo_endpoint") || endpointInput.value || "").trim();
+      if (!endpoint || !endpoint.startsWith("http")) {
+        messages.push("✗ Endpoint no configurado o inválido.");
+      } else {
+        messages.push("✓ Endpoint configurado.");
+      }
+      const fecha = document.getElementById("fecha").value;
+      const estado = document.getElementById("estado").value.trim();
+      if (!fecha || !estado) {
+        messages.push("✗ Falta Fecha o Estado de ánimo.");
+      } else {
+        messages.push("✓ Fecha y Estado de ánimo presentes.");
+      }
+      const nota = Number(notaInput.value);
+      if (!(Number.isFinite(nota) && nota >= 0 && nota <= 10)) {
+        messages.push("✗ Nota fuera de rango (0–10).");
+      } else {
+        messages.push("✓ Nota en rango (0–10). 0 = sin evaluar.");
+      }
+      const consent = document.getElementById("consent").checked;
+      if (!consent) {
+        messages.push("✗ Consentimiento no aceptado (es obligatorio para enviar).");
+      } else {
+        messages.push("✓ Consentimiento aceptado.");
+      }
+      formStatus.textContent = messages.join(" | ");
+      formStatus.className = messages.some(m => m.startsWith("✗")) ? "status error" : "status ok";
+    });
+  </script>
+</body>
+</html>
