@@ -335,7 +335,7 @@
       notaLabel.textContent = val === 0 ? "0 = sin evaluar" : String(val);
     });
 
-    // Envío del formulario
+    // Envío del formulario (ahora como formulario clásico, no JSON)
     const form = document.getElementById("registroForm");
     const formStatus = document.getElementById("formStatus");
 
@@ -390,15 +390,23 @@
 
       try {
         formStatus.textContent = "Enviando…";
+
+        // 👉 Enviar como formulario clásico (URL-encoded), sin JSON ni cabecera especial
+        const body = new URLSearchParams();
+        Object.entries(payload).forEach(([key, value]) => {
+          body.append(key, String(value));
+        });
+
         const res = await fetch(endpoint, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body
         });
+
         if (!res.ok) {
           const text = await res.text();
           throw new Error(text || "Error al enviar");
         }
+
         formStatus.textContent = "¡Registro enviado! Gracias por completar tu día.";
         formStatus.className = "status ok";
 
